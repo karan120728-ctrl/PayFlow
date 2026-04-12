@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PayFlow | Invoices</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .status-pending { @apply bg-amber-500/10 text-amber-400 border-amber-500/20; }
+    .status-paid { @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/20; }
+    .status-overdue { @apply bg-red-500/10 text-red-400 border-red-500/20; }
+  </style>
+</head>
+<body class="bg-slate-950 min-h-screen text-slate-200 flex">
+  
+  <div id="sidebar-container"></div>
+
+  <main class="flex-1 transition-all duration-300 ml-0 md:ml-64 p-4 md:p-8 relative">
+    <!-- Mobile Header -->
+    <header class="md:hidden sticky top-0 bg-slate-950/80 backdrop-blur-md z-40 flex items-center justify-between p-4 -mx-4 -mt-4 border-b border-slate-800 mb-6">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center bg-slate-900 border border-slate-700 rounded-lg text-slate-300 active:scale-95 transition-transform">
+          <i class="fas fa-bars"></i>
+        </button>
+        <span class="text-lg font-bold text-slate-100">PayFlow</span>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+        <i class="fas fa-user-circle text-slate-400"></i>
+      </div>
+    </header>
+
+    <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none -z-10"></div>
+    
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-100 mb-2">Invoices</h1>
+        <p class="text-slate-400">Track and manage your billings.</p>
+      </div>
+      <div>
+        <button onclick="openModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-slate-100 rounded-xl font-medium transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2">
+          <i class="fas fa-file-invoice"></i> Create Invoice
+        </button>
+      </div>
+    </header>
+
+    <div class="bg-slate-800 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-lg shadow-black/20 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[700px]">
+        <thead>
+          <tr class="border-b border-slate-700 bg-slate-900 text-slate-400 text-sm tracking-wider uppercase">
+            <th class="py-4 px-6 font-medium">Invoice No</th>
+            <th class="py-4 px-6 font-medium">Client</th>
+            <th class="py-4 px-6 font-medium">Amount</th>
+            <th class="py-4 px-6 font-medium">Due Date</th>
+            <th class="py-4 px-6 font-medium">Status</th>
+            <th class="py-4 px-6 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="invoices-table" class="divide-y divide-slate-700/50 whitespace-nowrap">
+          <tr>
+            <td colspan="6" class="py-8 text-center text-slate-500">
+              <i class="fas fa-spinner fa-spin mr-2"></i> Loading invoices...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal creation -->
+  <div id="invoice-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-lg shadow-black/20 transform scale-95 transition-transform" id="modal-content">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-slate-100">Create Invoice</h2>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-100 transition-colors"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <form id="invoice-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1">Client</label>
+          <select id="i-client" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1">Amount ($)</label>
+          <input type="number" step="0.01" id="i-amount" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1">Due Date</label>
+          <input type="date" id="i-date" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="pt-2">
+          <button type="submit" class="w-full py-3 bg-indigo-600 text-slate-100 rounded-xl font-medium transition-all shadow-lg">Save Invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadSidebar();
+      loadInvoices();
+      populateClients();
+    });
+
+    const API_BASE_URL = 'http://localhost:3000';
+    const formatMoney = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+
+    async function loadInvoices() {
+      const tbody = document.getElementById('invoices-table');
+      try {
+        const invoices = await api('/invoices');
+        
+        if (invoices.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-500">No invoices generated yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = invoices.map(i => {
+          // Status Badge
+          const sClass = `status-${i.status}`;
+          const emailBadge = i.email_sent_count > 0 ? `<span title="Email sent" class="text-blue-400 ml-1 opacity-60"><i class="fas fa-envelope text-[10px]"></i></span>` : '';
+          const waBadge = i.whatsapp_sent_count > 0 ? `<span title="WhatsApp sent" class="text-emerald-400 ml-1 opacity-60"><i class="fab fa-whatsapp text-[10px]"></i></span>` : '';
+          
+          return `
+          <tr class="hover:bg-slate-700/40 transition-colors group">
+            <td class="py-4 px-6 font-medium text-slate-100">${i.invoice_number}</td>
+            <td class="py-4 px-6 text-slate-300">
+              <div class="flex items-center">
+                ${i.client_name}
+                ${emailBadge}
+                ${waBadge}
+              </div>
+            </td>
+            <td class="py-4 px-6 font-semibold text-slate-100">${formatMoney(i.amount)}</td>
+            <td class="py-4 px-6 text-slate-400">${new Date(i.due_date).toLocaleDateString()}</td>
+            <td class="py-4 px-6">
+              <span class="px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider border ${sClass}">
+                ${i.status}
+              </span>
+            </td>
+            <td class="py-4 px-6 text-right whitespace-nowrap">
+              <a href="${API_BASE_URL}/invoices/${i.id}/pdf?token=${getToken()}" target="_blank"
+                class="opacity-0 group-hover:opacity-100 inline-flex items-center justify-center p-2 bg-slate-500/20 text-slate-300 hover:bg-slate-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Download PDF">
+                <i class="fas fa-file-pdf"></i>
+              </a>
+              ${i.status !== 'paid' ? `
+                <button onclick="sendEmailReminder(this, ${i.id})" 
+                   class="opacity-0 group-hover:opacity-100 p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Email Reminder">
+                  <i class="fas fa-envelope"></i>
+                </button>
+                <button onclick="sendWhatsAppReminder(this, ${i.id}, '${i.client_phone}')" 
+                   class="opacity-0 group-hover:opacity-100 p-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="WhatsApp Reminder">
+                  <i class="fab fa-whatsapp"></i>
+                </button>
+                <button onclick="copyReminder(this, ${i.id})" 
+                   class="opacity-0 group-hover:opacity-100 p-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Copy Message">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button onclick="payNow(${i.id}, ${i.amount})" 
+                   class="opacity-0 group-hover:opacity-100 px-3 py-2 bg-violet-600/20 text-violet-400 hover:bg-violet-600 hover:text-white rounded-lg transition-all text-xs font-bold mr-1.5">
+                  PAY
+                </button>
+                <button onclick="markPaid(${i.id})" 
+                   class="opacity-0 group-hover:opacity-100 p-2 bg-emerald-600/30 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium">
+                  <i class="fas fa-check"></i>
+                </button>
+              ` : `<span class="text-slate-500 text-xs italic"><i class="fas fa-check-double mr-1 text-emerald-400"></i> Settled</span>`}
+            </td>
+          </tr>
+        `;
+        }).join('');
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-red-400">Failed to load invoices.</td></tr>`;
+      }
+    }
+
+    async function populateClients() {
+      const select = document.getElementById('i-client');
+      try {
+        const clients = await api('/clients');
+        if(clients.length === 0) {
+          select.innerHTML = '<option value="">No clients found - Add one first</option>';
+        } else {
+          select.innerHTML = '<option value="">Select a client...</option>' + 
+            clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+      } catch(e) {}
+    }
+
+    function startCooldown(btn) {
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+      let countdown = 60;
+      
+      const timer = setInterval(() => {
+        countdown--;
+        btn.innerHTML = `<span class="text-[9px]">${countdown}s</span>`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+          btn.innerHTML = originalHtml;
+        }
+      }, 1000);
+    }
+
+    async function sendEmailReminder(btn, id) {
+      try {
+        showToast('Sending email reminder...', 'success');
+        await api(`/reminders/send/${id}`, 'POST', { template: 'reminder', type: 'email' });
+        showToast('Email sent successfully!');
+        startCooldown(btn);
+        loadInvoices(); // Refresh badges
+      } catch(e) { }
+    }
+
+    async function sendWhatsAppReminder(btn, id, phone) {
+      try {
+        if (!phone || phone === 'null') {
+          showToast('No phone number found for this client', 'error');
+          return;
+        }
+
+        showToast('Processing WhatsApp...', 'success');
+        
+        // 1. Trigger Automated Send (Mock or API)
+        await api(`/reminders/send/${id}`, 'POST', { template: 'reminder', type: 'whatsapp' });
+        
+        // 2. Open Manual WA.me Link in background for 100% reliability
+        const preview = await api(`/reminders/preview/${id}?type=whatsapp&template=reminder`);
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(preview.text)}`;
+        window.open(waUrl, '_blank');
+
+        showToast('WhatsApp reminder triggered!');
+        startCooldown(btn);
+        loadInvoices(); // Refresh badges
+      } catch(e) { }
+    }
+
+    async function copyReminder(btn, id) {
+      try {
+        const preview = await api(`/reminders/preview/${id}?type=whatsapp&template=reminder`);
+        await navigator.clipboard.writeText(preview.text);
+        showToast('✅ Message copied to clipboard!');
+        startCooldown(btn);
+      } catch(e) {
+        showToast('Failed to copy. Please try again.', 'error');
+      }
+    }
+
+
+    async function markPaid(id) {
+      try {
+        showToast('Updating invoice status...', 'success');
+        await api(`/invoices/${id}/status`, 'PUT', { status: 'paid' });
+        showToast('✅ Invoice successfully marked as Paid!');
+        await loadInvoices();
+      } catch(e) {
+        showToast('Failed to update status. Please try again.', 'error');
+      }
+    }
+
+    async function payNow(invoiceId, amount) {
+      try {
+        showToast('Opening payment gateway...', 'success');
+        // Step 1: Create Razorpay order on our backend
+        const order = await api(`/payments/${invoiceId}/order`, 'POST');
+
+        // Step 2: Open Razorpay Checkout popup
+        const options = {
+          key: order.key_id,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'PayFlow',
+          description: `Invoice Payment - ${order.invoice_number}`,
+          order_id: order.order_id,
+          prefill: {
+            name: order.client_name,
+            email: order.client_email,
+          },
+          theme: { color: '#6366f1' },
+          handler: async function (response) {
+            // Step 3: Verify payment signature on backend
+            try {
+              await api(`/payments/${invoiceId}/verify`, 'POST', {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
+              showToast('✅ Payment Successful! Invoice marked as Paid.');
+              loadInvoices();
+            } catch(e) {
+              showToast('Payment verification failed. Contact support.', 'error');
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', (resp) => {
+          showToast(`Payment failed: ${resp.error.description}`, 'error');
+        });
+        rzp.open();
+      } catch(e) {
+        showToast('Could not initiate payment. Please try again.', 'error');
+      }
+    }
+
+    const modal = document.getElementById('invoice-modal');
+    const modalContent = document.getElementById('modal-content');
+    
+    function openModal() {
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modalContent.classList.remove('scale-95');
+      }, 10);
+      
+      // Auto-set date to today
+      document.getElementById('i-date').valueAsDate = new Date();
+    }
+    
+    function closeModal() {
+      modal.classList.add('opacity-0');
+      modalContent.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        document.getElementById('invoice-form').reset();
+      }, 300);
+    }
+
+    document.getElementById('invoice-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        client_id: parseInt(document.getElementById('i-client').value),
+        amount: parseFloat(document.getElementById('i-amount').value),
+        due_date: document.getElementById('i-date').value
+      };
+      
+      try {
+        await api('/invoices', 'POST', body);
+        showToast('Invoice created successfully');
+        closeModal();
+        loadInvoices();
+      } catch(e) {}
+    });
+  </script>
+</body>
+</html>

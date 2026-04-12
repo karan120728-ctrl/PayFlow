@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PayFlow | Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 min-h-screen text-slate-200 flex">
+  
+  <div id="sidebar-container"></div>
+
+  <main class="flex-1 transition-all duration-300 ml-0 md:ml-64 p-4 md:p-8 relative">
+    <!-- Mobile Header -->
+    <header class="md:hidden sticky top-0 bg-slate-950/80 backdrop-blur-md z-40 flex items-center justify-between p-4 -mx-4 -mt-4 border-b border-slate-800 mb-6">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center bg-slate-900 border border-slate-700 rounded-lg text-slate-300 active:scale-95 transition-transform">
+          <i class="fas fa-bars"></i>
+        </button>
+        <span class="text-lg font-bold text-slate-100">PayFlow</span>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+        <i class="fas fa-user-circle text-slate-400"></i>
+      </div>
+    </header>
+
+    <!-- Top bg gradient -->
+    <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none -z-10"></div>
+    
+    <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-100 mb-2">Overview</h1>
+        <p class="text-slate-400">Here's what's happening with your finances today.</p>
+      </div>
+      <div>
+        <a href="/pages/invoices.html" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-slate-100 rounded-xl font-medium transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2">
+          <i class="fas fa-plus"></i> New Invoice
+        </a>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      
+      <!-- Card 1 -->
+      <div class="bg-slate-800 backdrop-blur-sm border border-slate-700 p-6 rounded-2xl shadow-lg shadow-black/20 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <i class="fas fa-wallet text-6xl text-emerald-400"></i>
+        </div>
+        <p class="text-slate-400 font-medium mb-1">Total Earned 💰</p>
+        <h3 class="text-4xl font-bold text-slate-100 mb-2 tracking-tight" id="dash-earned">$0.00</h3>
+        <p class="text-sm text-emerald-400 flex items-center gap-1"><i class="fas fa-arrow-up"></i> All time</p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-slate-800 backdrop-blur-sm border border-slate-700 p-6 rounded-2xl shadow-lg shadow-black/20 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <i class="fas fa-hourglass-half text-6xl text-amber-400"></i>
+        </div>
+        <p class="text-slate-400 font-medium mb-1">Pending ⚠️</p>
+        <h3 class="text-4xl font-bold text-slate-100 mb-2 tracking-tight" id="dash-pending">$0.00</h3>
+        <p class="text-sm text-slate-400 leading-tight">Awaiting payment</p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-slate-800 backdrop-blur-sm border border-red-900/30 p-6 rounded-2xl shadow-lg shadow-black/20 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-600"></div>
+        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <i class="fas fa-exclamation-triangle text-6xl text-red-400"></i>
+        </div>
+        <p class="text-slate-400 font-medium mb-1">Overdue 🚨</p>
+        <h3 class="text-4xl font-bold text-slate-100 mb-2 tracking-tight" id="dash-overdue">$0.00</h3>
+        <p class="text-sm text-red-400 leading-tight">Requires immediate action</p>
+      </div>
+      
+    </div>
+
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadSidebar();
+      
+      try {
+        const summary = await api('/invoices/summary');
+        
+        const formatMoney = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+        
+        document.getElementById('dash-earned').textContent = formatMoney(summary.earned);
+        document.getElementById('dash-pending').textContent = formatMoney(summary.pending);
+        document.getElementById('dash-overdue').textContent = formatMoney(summary.overdue);
+        
+      } catch(e) {
+        console.error("Dashboard failed to load stats");
+      }
+    });
+  </script>
+</body>
+</html>
