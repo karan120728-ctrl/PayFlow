@@ -6,13 +6,22 @@ import path from 'path';
 export const buildApp = async () => {
   const app = Fastify({ logger: true });
 
-  await app.register(fastifyCors, { origin: '*' });
-
-  await app.register(fastifyStatic, {
-    root: path.join(__dirname, '..', 'public'),
-    prefix: '/', // Start serving pages at /
+  // ✅ FIXED CORS
+  await app.register(fastifyCors, {
+    origin: [
+      'https://payflowapp.netlify.app',
+      'http://localhost:3000'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   });
 
+  // ✅ PREFLIGHT HANDLER
+  app.options('*', async (request, reply) => {
+    reply.send();
+  });
+  
   // Plugins
   await app.register(import('@fastify/jwt'), {
     secret: process.env.JWT_SECRET || 'super_secret_jwt_key_payflow'
