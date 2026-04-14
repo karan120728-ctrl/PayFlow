@@ -32,8 +32,8 @@ async function api(endpoint, method = 'GET', body = null) {
     headers
   };
 
-  if (body) {
-    options.body = JSON.stringify(body);
+  if (body || ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+    options.body = JSON.stringify(body || {});
   }
 
   try {
