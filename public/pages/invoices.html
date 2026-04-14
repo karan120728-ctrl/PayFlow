@@ -143,32 +143,34 @@
               </span>
             </td>
             <td class="py-4 px-6 text-right whitespace-nowrap">
-              <a href="${window.API_BASE}/invoices/${i.id}/pdf?token=${getToken()}" target="_blank"
-                class="opacity-0 lg:group-hover:opacity-100 flex items-center justify-center p-2 bg-slate-500/20 text-slate-300 hover:bg-slate-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Download PDF">
-                <i class="fas fa-file-pdf"></i>
-              </a>
-              ${i.status !== 'paid' ? `
-                <button onclick="sendEmailReminder(this, ${i.id})" 
-                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Email Reminder">
-                  <i class="fas fa-envelope"></i>
-                </button>
-                <button onclick="sendWhatsAppReminder(this, ${i.id}, '${i.client_phone}')" 
-                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="WhatsApp Reminder">
-                  <i class="fab fa-whatsapp"></i>
-                </button>
-                <button onclick="copyReminder(this, ${i.id})" 
-                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Copy Message">
-                  <i class="fas fa-copy"></i>
-                </button>
-                <button onclick="payNow(${i.id}, ${i.amount})" 
-                   class="opacity-0 group-hover:opacity-100 px-3 py-2 bg-violet-600/20 text-violet-400 hover:bg-violet-600 hover:text-white rounded-lg transition-all text-xs font-bold mr-1.5">
-                  PAY
-                </button>
-                <button onclick="markPaid(${i.id})" 
-                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-emerald-600/30 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium">
-                  <i class="fas fa-check"></i>
-                </button>
-              ` : `<span class="text-slate-500 text-xs italic"><i class="fas fa-check-double mr-1 text-emerald-400"></i> Settled</span>`}
+              <div class="flex items-center justify-end gap-1.5 min-h-[40px]">
+                <a href="${window.API_BASE}/invoices/${i.id}/pdf?token=${getToken()}" target="_blank"
+                  class="lg:opacity-0 lg:group-hover:opacity-100 flex items-center justify-center w-9 h-9 bg-slate-500/10 text-slate-300 hover:bg-slate-500 hover:text-white rounded-lg transition-all text-xs font-medium" title="Download PDF">
+                  <i class="fas fa-file-pdf"></i>
+                </a>
+                ${i.status !== 'paid' ? `
+                  <button onclick="sendEmailReminder(this, ${i.id})" 
+                     class="lg:opacity-0 lg:group-hover:opacity-100 w-9 h-9 flex items-center justify-center bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all text-xs font-medium" title="Email Reminder">
+                    <i class="fas fa-envelope"></i>
+                  </button>
+                  <button onclick="sendWhatsAppReminder(this, ${i.id}, '${i.client_phone}')" 
+                     class="lg:opacity-0 lg:group-hover:opacity-100 w-9 h-9 flex items-center justify-center bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium" title="WhatsApp Reminder">
+                    <i class="fab fa-whatsapp"></i>
+                  </button>
+                  <button onclick="copyReminder(this, ${i.id})" 
+                     class="lg:opacity-0 lg:group-hover:opacity-100 w-9 h-9 flex items-center justify-center bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg transition-all text-xs font-medium" title="Copy Message">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                  <button onclick="payNow(${i.id}, ${i.amount})" 
+                     class="lg:opacity-0 lg:group-hover:opacity-100 px-3 h-9 flex items-center justify-center bg-violet-600/10 text-violet-400 hover:bg-violet-600 hover:text-white rounded-lg transition-all text-xs font-bold">
+                    PAY
+                  </button>
+                  <button onclick="markPaid(${i.id})" 
+                     class="lg:opacity-0 lg:group-hover:opacity-100 w-9 h-9 flex items-center justify-center bg-emerald-600/20 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium">
+                    <i class="fas fa-check"></i>
+                  </button>
+                ` : `<span class="text-slate-500 text-xs italic flex items-center gap-1.5 h-9"><i class="fas fa-check-double text-emerald-400"></i> Settled</span>`}
+              </div>
             </td>
           </tr>
         `;
