@@ -1,6 +1,7 @@
 // API Abstraction & UI Helpers
 
 const API_BASE = 'https://payflow-t6sj.onrender.com';
+window.API_BASE = API_BASE;
 
 function getToken() {
   return localStorage.getItem('payflow_token');

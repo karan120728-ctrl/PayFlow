@@ -71,7 +71,7 @@
   </main>
 
   <!-- Modal creation -->
-  <div id="invoice-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity">
+  <div id="invoice-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[70] hidden flex items-center justify-center opacity-0 transition-opacity p-4">
     <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-lg shadow-black/20 transform scale-95 transition-transform" id="modal-content">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold text-slate-100">Create Invoice</h2>
@@ -107,7 +107,6 @@
       populateClients();
     });
 
-    const API_BASE_URL = 'http://localhost:3000';
     const formatMoney = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
     async function loadInvoices() {
@@ -144,21 +143,21 @@
               </span>
             </td>
             <td class="py-4 px-6 text-right whitespace-nowrap">
-              <a href="${API_BASE_URL}/invoices/${i.id}/pdf?token=${getToken()}" target="_blank"
-                class="opacity-0 group-hover:opacity-100 inline-flex items-center justify-center p-2 bg-slate-500/20 text-slate-300 hover:bg-slate-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Download PDF">
+              <a href="${window.API_BASE}/invoices/${i.id}/pdf?token=${getToken()}" target="_blank"
+                class="opacity-0 lg:group-hover:opacity-100 flex items-center justify-center p-2 bg-slate-500/20 text-slate-300 hover:bg-slate-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Download PDF">
                 <i class="fas fa-file-pdf"></i>
               </a>
               ${i.status !== 'paid' ? `
                 <button onclick="sendEmailReminder(this, ${i.id})" 
-                   class="opacity-0 group-hover:opacity-100 p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Email Reminder">
+                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Email Reminder">
                   <i class="fas fa-envelope"></i>
                 </button>
                 <button onclick="sendWhatsAppReminder(this, ${i.id}, '${i.client_phone}')" 
-                   class="opacity-0 group-hover:opacity-100 p-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="WhatsApp Reminder">
+                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="WhatsApp Reminder">
                   <i class="fab fa-whatsapp"></i>
                 </button>
                 <button onclick="copyReminder(this, ${i.id})" 
-                   class="opacity-0 group-hover:opacity-100 p-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Copy Message">
+                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg transition-all text-xs font-medium mr-1.5" title="Copy Message">
                   <i class="fas fa-copy"></i>
                 </button>
                 <button onclick="payNow(${i.id}, ${i.amount})" 
@@ -166,7 +165,7 @@
                   PAY
                 </button>
                 <button onclick="markPaid(${i.id})" 
-                   class="opacity-0 group-hover:opacity-100 p-2 bg-emerald-600/30 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium">
+                   class="lg:opacity-0 lg:group-hover:opacity-100 p-2 bg-emerald-600/30 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all text-xs font-medium">
                   <i class="fas fa-check"></i>
                 </button>
               ` : `<span class="text-slate-500 text-xs italic"><i class="fas fa-check-double mr-1 text-emerald-400"></i> Settled</span>`}
