@@ -16,8 +16,10 @@ export class NotificationService {
       if (hasSmtpConfig) {
         console.log(`[Notification Engine] ✉️ Attempting to send email to ${options.to} via ${process.env.SMTP_HOST}...`);
         
+        const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
+        
         const info = await transporter.sendMail({
-          from: process.env.SMTP_FROM || '"PayFlow Alerts" <noreply@payflow.local>',
+          from: fromAddress,
           to: options.to,
           subject: options.subject,
           text: options.text,

@@ -63,6 +63,12 @@ export class ReminderService {
   static async dispatch(data: any, templateKey: 'friendly'|'reminder'|'urgent', type: 'email'|'whatsapp'|'sms', escalationLevel: number = 1, existingReminderId?: number) {
     console.log(`[ReminderService] Dispatching ${type} reminder for invoice ${data.invoice_number} (ID: ${data.invoice_id})`);
     
+    // Safety check for Email recipient
+    if (type === 'email' && (!data.client_email || data.client_email === 'null')) {
+      console.warn(`[ReminderService] Cancelled email: Client ${data.client_name} has no email address.`);
+      return { id: 0, message: 'Client does not have an email address', status: 'failed', type: 'email' };
+    }
+
     if (type === 'sms') {
       console.warn('[ReminderService] SMS requested but not yet implemented.');
       return { id: 0, message: 'SMS placeholder', status: 'failed', type: 'sms' };
