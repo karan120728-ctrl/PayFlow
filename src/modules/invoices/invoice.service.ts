@@ -65,13 +65,24 @@ export class InvoiceService {
   }
 
   static async updateStatus(userId: number, invoiceId: number, data: UpdateInvoiceStatusInput) {
-    const [result] = await pool.execute<ResultSetHeader>(
-      'UPDATE invoices SET status = ? WHERE id = ? AND user_id = ?',
-      [data.status, invoiceId, userId]
-    );
+    try {
+      console.log(`[InvoiceService] Executing UPDATE — status: ${data.status}, invoiceId: ${invoiceId}, userId: ${userId}`);
+      
+      const [result] = await pool.execute<ResultSetHeader>(
+        'UPDATE invoices SET status = ? WHERE id = ? AND user_id = ?',
+        [data.status, invoiceId, userId]
+      );
 
-    if (result.affectedRows === 0) {
-      throw new NotFoundError("Invoice not found");
+      console.log(`[InvoiceService] UPDATE result — affectedRows: ${result.affectedRows}`);
+
+      if (result.affectedRows === 0) {
+        throw new NotFoundError("Invoice not found");
+      }
+
+      return { updated: true };
+    } catch (err: any) {
+      console.error(`[InvoiceService] updateStatus failed:`, err.message || err);
+      throw err;
     }
   }
 }

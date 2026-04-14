@@ -146,7 +146,7 @@
             <td class="py-4 px-6 text-right whitespace-nowrap">
               <div class="flex items-center justify-end gap-1.5 min-h-[40px]">
                 <a href="${window.API_BASE}/invoices/${i.id}/pdf?token=${getToken()}" target="_blank"
-                  class="flex items-center justify-center w-9 h-9 bg-slate-500/10 text-slate-300 hover:bg-slate-500 hover:text-white rounded-lg transition-all text-xs font-medium" title="Download PDF">
+                   class="flex items-center justify-center w-9 h-9 bg-slate-500/10 text-slate-300 hover:bg-slate-500 hover:text-white rounded-lg transition-all text-xs font-medium" title="Download PDF">
                   <i class="fas fa-file-pdf"></i>
                 </a>
                 ${i.status !== 'paid' ? `
@@ -216,10 +216,13 @@
       try {
         showToast('Sending email reminder...', 'success');
         await api(`/reminders/send/${id}`, 'POST', { template: 'reminder', type: 'email' });
-        showToast('Email sent successfully!');
+        showToast('✅ Email sent successfully!');
         startCooldown(btn);
         loadInvoices(); // Refresh badges
-      } catch(e) { }
+      } catch(e) {
+        // Error toast is already shown by api() helper
+        console.error('Email failed:', e);
+      }
     }
 
     async function sendWhatsAppReminder(btn, id, phone) {
@@ -229,20 +232,22 @@
           return;
         }
 
-        showToast('Processing WhatsApp...', 'success');
+        showToast('Processing WhatsApp reminder...', 'success');
         
-        // 1. Trigger Automated Send (Mock or API)
+        // 1. Trigger Automated Send (Official API or Tracker)
         await api(`/reminders/send/${id}`, 'POST', { template: 'reminder', type: 'whatsapp' });
         
-        // 2. Open Manual WA.me Link in background for 100% reliability
+        // 2. Open Manual WA Link for absolute reliability
         const preview = await api(`/reminders/preview/${id}?type=whatsapp&template=reminder`);
         const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(preview.text)}`;
         window.open(waUrl, '_blank');
 
-        showToast('WhatsApp reminder triggered!');
+        showToast('✅ WhatsApp reminder processed!');
         startCooldown(btn);
-        loadInvoices(); // Refresh badges
-      } catch(e) { }
+        loadInvoices(); 
+      } catch(e) {
+        console.error('WhatsApp failed:', e);
+      }
     }
 
     async function copyReminder(btn, id) {
@@ -258,13 +263,16 @@
 
 
     async function markPaid(id) {
+      if (!confirm('Are you sure you want to mark this invoice as paid manually?')) return;
+      
       try {
         showToast('Updating invoice status...', 'success');
         await api(`/invoices/${id}/status`, 'PUT', { status: 'paid' });
         showToast('✅ Invoice successfully marked as Paid!');
         await loadInvoices();
       } catch(e) {
-        showToast('Failed to update status. Please try again.', 'error');
+        // api() already shows error toast, we don't need a redundant generic one
+        console.error('Mark paid failed:', e);
       }
     }
 
@@ -309,7 +317,7 @@
         });
         rzp.open();
       } catch(e) {
-        showToast('Could not initiate payment. Please try again.', 'error');
+        // Handled by api()
       }
     }
 
@@ -346,7 +354,7 @@
       
       try {
         await api('/invoices', 'POST', body);
-        showToast('Invoice created successfully');
+        showToast('✅ Invoice created successfully');
         closeModal();
         loadInvoices();
       } catch(e) {}

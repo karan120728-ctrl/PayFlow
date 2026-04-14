@@ -19,19 +19,19 @@ export class NotificationService {
           to: options.to,
           subject: options.subject,
           text: options.text,
-          html: options.html
+          html: options.html || options.text.replace(/\n/g, '<br>')
         });
+        console.log(`[Notification Engine] ✅ Email sent to ${options.to}`);
         return true; 
       } else {
-        // Fallback for Development Environment: Log cleanly instead of crashing
-        console.log(`\n=================================================`);
-        console.log(`[Notification Engine Fallback]`);
-        console.log(`✉️ MOCK EMAIL DISPATCHED`);
-        console.log(`TO: ${options.to}`);
-        console.log(`SUBJECT: ${options.subject}`);
-        console.log(`BODY:\n${options.text}`);
-        console.log(`=================================================\n`);
-        return true; // Simulate success to proceed with DB tracking
+        // No SMTP configured — log warning clearly and return FALSE
+        console.warn(`\n=================================================`);
+        console.warn(`[Notification Engine] ⚠️ SMTP NOT CONFIGURED`);
+        console.warn(`Cannot send email to: ${options.to}`);
+        console.warn(`Subject: ${options.subject}`);
+        console.warn(`Set SMTP_HOST, SMTP_USER, SMTP_PASS env vars on your server.`);
+        console.warn(`=================================================\n`);
+        return false; // Return false — email was NOT sent
       }
     } catch (error) {
       console.error('[Notification Engine] ❌ Email Delivery Failed:', error);
@@ -59,13 +59,12 @@ export class NotificationService {
         });
         return true;
       } else {
-        console.log(`\n=================================================`);
-        console.log(`[Notification Engine Fallback]`);
-        console.log(`📱 MOCK WHATSAPP DISPATCHED`);
-        console.log(`TO: ${to}`);
-        console.log(`BODY:\n${message}`);
-        console.log(`=================================================\n`);
-        return true;
+        console.warn(`\n=================================================`);
+        console.warn(`[Notification Engine] ⚠️ WHATSAPP NOT CONFIGURED`);
+        console.warn(`Cannot send WhatsApp to: ${to}`);
+        console.warn(`Set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_ID env vars.`);
+        console.warn(`=================================================\n`);
+        return false;
       }
     } catch (error) {
       console.error('[Notification Engine] ❌ WhatsApp Delivery Failed:', error);

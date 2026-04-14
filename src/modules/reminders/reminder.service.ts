@@ -35,10 +35,10 @@ export class ReminderService {
 
   private static formatMessage(template: string, data: any) {
     return template
-      .replace('{client_name}', data.client_name)
-      .replace('{invoice_number}', data.invoice_number)
-      .replace('{amount}', parseFloat(data.amount).toFixed(2))
-      .replace('{due_date}', new Date(data.due_date).toLocaleDateString('en-IN'));
+      .replace(/{client_name}/g, data.client_name)
+      .replace(/{invoice_number}/g, data.invoice_number)
+      .replace(/{amount}/g, parseFloat(data.amount).toFixed(2))
+      .replace(/{due_date}/g, new Date(data.due_date).toLocaleDateString('en-IN'));
   }
 
   static async getPreviewText(userId: number, invoiceId: number, templateKey: 'friendly'|'reminder'|'urgent', type: 'email'|'whatsapp') {
@@ -61,21 +61,28 @@ export class ReminderService {
    * Internal Delivery Mechanism with DB Tracker
    */
   static async dispatch(data: any, templateKey: 'friendly'|'reminder'|'urgent', type: 'email'|'whatsapp'|'sms', escalationLevel: number = 1, existingReminderId?: number) {
-    const isWhatsApp = type === 'whatsapp';
-    if (type === 'sms') {
-      console.log('SMS not yet supported, falling back to mock.');
-      return { id: 0, message: 'SMS placeholder', status: 'sent', type: 'sms' };
-    }
-    const templateSet = isWhatsApp ? this.templates.whatsapp : this.templates.email;
-    const template = templateSet[templateKey];
+    console.log(`[ReminderService] Dispatching ${type} reminder for invoice ${data.invoice_number} (ID: ${data.invoice_id})`);
     
+    if (type === 'sms') {
+      console.warn('[ReminderService] SMS requested but not yet implemented.');
+      return { id: 0, message: 'SMS placeholder', status: 'failed', type: 'sms' };
+    }
+
+    const templateSet = (type === 'whatsapp') ? this.templates.whatsapp : this.templates.email;
+    const template = (templateSet as any)[templateKey];
+    
+    if (!template) {
+      console.error(`[ReminderService] Template ${templateKey} not found for type ${type}`);
+      return { id: 0, message: 'Template missing', status: 'failed', type };
+    }
+
     const message = this.formatMessage(template.body, data);
     let isSuccess = false;
 
-    if (isWhatsApp) {
+    if (type === 'whatsapp') {
       isSuccess = await NotificationService.sendWhatsApp(data.client_phone, message);
     } else {
-      const subject = (template as any).subject.replace('{invoice_number}', data.invoice_number);
+      const subject = template.subject.replace(/{invoice_number}/g, data.invoice_number);
       isSuccess = await NotificationService.sendEmail({
         to: data.client_email,
         subject: subject,
@@ -84,11 +91,14 @@ export class ReminderService {
     }
 
     const status = isSuccess ? 'sent' : 'failed';
+    console.log(`[ReminderService] Delivery status: ${status}`);
+
     const nextRetry = isSuccess ? null : new Date(Date.now() + 4 * 60 * 60 * 1000); 
 
     if (existingReminderId) {
-       let retryQuery = `UPDATE reminders SET status = ?, sent_at = ${isSuccess ? 'NOW()' : 'sent_at'}, retry_count = retry_count + 1`;
-       const params: any[] = [status];
+       console.log(`[ReminderService] Updating existing reminder ${existingReminderId}`);
+       let retryQuery = `UPDATE reminders SET status = ?, message = ?, sent_at = ${isSuccess ? 'NOW()' : 'sent_at'}, retry_count = retry_count + 1`;
+       const params: any[] = [status, message];
        if (!isSuccess) {
          retryQuery += `, next_retry_at = ?`;
          params.push(nextRetry);
@@ -99,9 +109,10 @@ export class ReminderService {
        params.push(existingReminderId);
 
        await pool.execute(retryQuery, params);
-       return { id: existingReminderId, message, status };
+       return { id: existingReminderId, message, status, type };
     }
 
+    console.log(`[ReminderService] Creating new reminder record for ${type}`);
     const [result] = await pool.execute<ResultSetHeader>(
       `INSERT INTO reminders 
       (invoice_id, type, status, message, escalation_level, next_retry_at, sent_at) 

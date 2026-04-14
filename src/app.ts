@@ -6,20 +6,15 @@ import path from 'path';
 export const buildApp = async () => {
   const app = Fastify({ logger: true });
 
-  // ✅ FIXED CORS
+  // ✅ CORS — handles preflight OPTIONS automatically
   await app.register(fastifyCors, {
     origin: [
       'https://payflowapp.netlify.app',
       'http://localhost:3000'
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
-  });
-
-  // ✅ PREFLIGHT HANDLER
-  app.options('*', async (request, reply) => {
-    reply.send();
   });
   
   // Plugins
@@ -27,9 +22,15 @@ export const buildApp = async () => {
     secret: process.env.JWT_SECRET || 'super_secret_jwt_key_payflow'
   });
 
-  // Global error handler
+  // Global error handler with detailed logging
   app.setErrorHandler((error: any, request, reply) => {
-    app.log.error(error);
+    app.log.error({
+      message: error.message,
+      statusCode: error.statusCode,
+      url: request.url,
+      method: request.method,
+      stack: error.stack
+    });
     const statusCode = (error as any).statusCode || 500;
     reply.status(statusCode).send({
       success: false,
@@ -44,6 +45,9 @@ export const buildApp = async () => {
   app.register(import('./modules/invoices/invoice.routes'), { prefix: '/invoices' });
   app.register(import('./modules/reminders/reminder.routes'), { prefix: '/reminders' });
   app.register(import('./modules/payments/payment.routes'), { prefix: '/payments' });
+
+  // Health check
+  app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
   return app;
 };
