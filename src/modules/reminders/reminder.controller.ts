@@ -45,6 +45,7 @@ export const sendReminderHandler = async (request: FastifyRequest<{ Params: { in
       data: null
     });
   }
+  }
 };
 
 export const getReminderPreviewHandler = async (request: FastifyRequest<{ Params: { invoiceId: string }, Querystring: { template?: string, type?: string } }>, reply: FastifyReply) => {

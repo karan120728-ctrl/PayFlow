@@ -12,30 +12,26 @@ export class NotificationService {
   static async sendEmail(options: SendMailOptions): Promise<boolean> {
     const hasSmtpConfig = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
 
+    if (!hasSmtpConfig) {
+      console.error('[Notification Engine] ❌ SMTP Configuration Missing! Check your environment variables.');
+      return false;
+    }
+
     try {
-      if (hasSmtpConfig) {
-        console.log(`[Notification Engine] ✉️ Attempting to send email to ${options.to} via ${process.env.SMTP_HOST}...`);
-        
-        const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
-        
-        const info = await transporter.sendMail({
-          from: fromAddress,
-          to: options.to,
-          subject: options.subject,
-          text: options.text,
-          html: options.html || options.text.replace(/\n/g, '<br>')
-        });
-        
-        console.log(`[Notification Engine] ✅ Email sent successfully! MessageId: ${info.messageId}`);
-        return true; 
-      } else {
-        console.warn(`\n=================================================`);
-        console.warn(`[Notification Engine] ⚠️ SMTP NOT CONFIGURED`);
-        console.warn(`Cannot send email to: ${options.to}`);
-        console.warn(`MISSING: ${!process.env.SMTP_HOST ? 'SMTP_HOST ' : ''}${!process.env.SMTP_USER ? 'SMTP_USER ' : ''}${!process.env.SMTP_PASS ? 'SMTP_PASS' : ''}`);
-        console.warn(`=================================================\n`);
-        return false; 
-      }
+      console.log(`[Notification Engine] ✉️ Attempting to send email to ${options.to} via ${process.env.SMTP_HOST}...`);
+      
+      const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
+      
+      const info = await transporter.sendMail({
+        from: fromAddress,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html || options.text.replace(/\n/g, '<br>')
+      });
+      
+      console.log(`[Notification Engine] ✅ Email sent successfully! MessageId: ${info.messageId}`);
+      return true; 
     } catch (error: any) {
       console.error('-------------------------------------------------');
       console.error('[Notification Engine] ❌ EMAIL DELIVERY FAILED');
