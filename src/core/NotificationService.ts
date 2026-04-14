@@ -38,6 +38,7 @@ export class NotificationService {
       console.error(`ERROR NAME: ${error.name}`);
       console.error(`ERROR MESSAGE: ${error.message}`);
       if (error.code) console.error(`ERROR CODE: ${error.code}`);
+      if (error.response) console.error(`SERVER RESPONSE: ${error.response}`);
       if (error.command) console.error(`COMMAND: ${error.command}`);
       console.error('-------------------------------------------------');
       return false; 
