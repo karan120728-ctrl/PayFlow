@@ -10,31 +10,38 @@ export interface SendMailOptions {
 
 export class NotificationService {
   static async sendEmail(options: SendMailOptions): Promise<boolean> {
-    const hasSmtpConfig = process.env.SMTP_HOST && process.env.SMTP_USER;
+    const hasSmtpConfig = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
 
     try {
       if (hasSmtpConfig) {
-        await transporter.sendMail({
+        console.log(`[Notification Engine] ✉️ Attempting to send email to ${options.to} via ${process.env.SMTP_HOST}...`);
+        
+        const info = await transporter.sendMail({
           from: process.env.SMTP_FROM || '"PayFlow Alerts" <noreply@payflow.local>',
           to: options.to,
           subject: options.subject,
           text: options.text,
           html: options.html || options.text.replace(/\n/g, '<br>')
         });
-        console.log(`[Notification Engine] ✅ Email sent to ${options.to}`);
+        
+        console.log(`[Notification Engine] ✅ Email sent successfully! MessageId: ${info.messageId}`);
         return true; 
       } else {
-        // No SMTP configured — log warning clearly and return FALSE
         console.warn(`\n=================================================`);
         console.warn(`[Notification Engine] ⚠️ SMTP NOT CONFIGURED`);
         console.warn(`Cannot send email to: ${options.to}`);
-        console.warn(`Subject: ${options.subject}`);
-        console.warn(`Set SMTP_HOST, SMTP_USER, SMTP_PASS env vars on your server.`);
+        console.warn(`MISSING: ${!process.env.SMTP_HOST ? 'SMTP_HOST ' : ''}${!process.env.SMTP_USER ? 'SMTP_USER ' : ''}${!process.env.SMTP_PASS ? 'SMTP_PASS' : ''}`);
         console.warn(`=================================================\n`);
-        return false; // Return false — email was NOT sent
+        return false; 
       }
-    } catch (error) {
-      console.error('[Notification Engine] ❌ Email Delivery Failed:', error);
+    } catch (error: any) {
+      console.error('-------------------------------------------------');
+      console.error('[Notification Engine] ❌ EMAIL DELIVERY FAILED');
+      console.error(`ERROR NAME: ${error.name}`);
+      console.error(`ERROR MESSAGE: ${error.message}`);
+      if (error.code) console.error(`ERROR CODE: ${error.code}`);
+      if (error.command) console.error(`COMMAND: ${error.command}`);
+      console.error('-------------------------------------------------');
       return false; 
     }
   }
@@ -57,6 +64,7 @@ export class NotificationService {
             'Content-Type': 'application/json'
           }
         });
+        console.log(`[Notification Engine] ✅ WhatsApp sent to ${to}`);
         return true;
       } else {
         console.warn(`\n=================================================`);
@@ -66,8 +74,11 @@ export class NotificationService {
         console.warn(`=================================================\n`);
         return false;
       }
-    } catch (error) {
-      console.error('[Notification Engine] ❌ WhatsApp Delivery Failed:', error);
+    } catch (error: any) {
+      console.error('-------------------------------------------------');
+      console.error('[Notification Engine] ❌ WHATSAPP DELIVERY FAILED');
+      console.error(`ERROR MESSAGE: ${error.response?.data?.error?.message || error.message}`);
+      console.error('-------------------------------------------------');
       return false;
     }
   }

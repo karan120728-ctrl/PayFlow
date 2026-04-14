@@ -226,27 +226,34 @@
     }
 
     async function sendWhatsAppReminder(btn, id, phone) {
-      try {
-        if (!phone || phone === 'null') {
-          showToast('No phone number found for this client', 'error');
-          return;
-        }
+      if (!phone || phone === 'null') {
+        showToast('No phone number found for this client', 'error');
+        return;
+      }
 
-        showToast('Processing WhatsApp reminder...', 'success');
-        
-        // 1. Trigger Automated Send (Official API or Tracker)
+      showToast('Processing WhatsApp reminder...', 'success');
+      
+      try {
+        // 1. Attempt Automated Send (Optional)
+        // We wrap this in a try-catch so that if it fails (not configured), 
+        // we still proceed to the manual link below.
         await api(`/reminders/send/${id}`, 'POST', { template: 'reminder', type: 'whatsapp' });
-        
+      } catch(e) {
+        console.warn('Automated WhatsApp send failed (likely not configured), falling back to manual link.');
+      }
+      
+      try {
         // 2. Open Manual WA Link for absolute reliability
         const preview = await api(`/reminders/preview/${id}?type=whatsapp&template=reminder`);
         const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(preview.text)}`;
         window.open(waUrl, '_blank');
 
-        showToast('✅ WhatsApp reminder processed!');
+        showToast('✅ WhatsApp reminder link opened!');
         startCooldown(btn);
         loadInvoices(); 
       } catch(e) {
-        console.error('WhatsApp failed:', e);
+        console.error('WhatsApp manual link failed:', e);
+        showToast('Could not generate WhatsApp link', 'error');
       }
     }
 
