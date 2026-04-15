@@ -10,8 +10,8 @@ export interface SendMailOptions {
 
 export class NotificationService {
   static async sendEmail(options: SendMailOptions): Promise<boolean> {
-    const hasSmtpConfig = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-
+    // const hasSmtpConfig = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+const hasSmtpConfig = process.env.SMTP_USER && process.env.SMTP_PASS;
     if (!hasSmtpConfig) {
       console.error('[Notification Engine] ❌ SMTP Configuration Missing! Check your environment variables.');
       return false;
