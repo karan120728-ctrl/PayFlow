@@ -18,9 +18,8 @@ export class NotificationService {
     }
 
     try {
-      console.log(`[Notification Engine] ✉️ Attempting to send email to ${options.to} via ${process.env.SMTP_HOST}...`);
-      
       const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
+      console.log(`[Notification Engine] ✉️ Sending email FROM: ${fromAddress} TO: ${options.to}`);
       
       const info = await transporter.sendMail({
         from: fromAddress,
